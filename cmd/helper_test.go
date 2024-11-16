@@ -4,6 +4,7 @@ package cmd
 import (
 	"os"
 	"path"
+	"path/filepath"
 	"runtime"
 	"testing"
 
@@ -76,10 +77,46 @@ func BindExist(linkName, tag, targetLinkName, targetTag string) bool {
 	})
 }
 
+// 准备测试使用文件夹
+func prepareTestDirectory(linkName string) (string, error) {
+	home := configuration.AppHome()
+
+	testRoot := path.Join(home, "test")
+	_ = os.Mkdir(testRoot, 0b111_111_101)
+
+	target := path.Join(testRoot, linkName)
+	stat, err := os.Stat(target)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			return "", err
+		}
+	} else if stat.IsDir() {
+		return filepath.FromSlash(target), nil
+	}
+	err = os.Mkdir(path.Join(testRoot, linkName), 0b111_111_101)
+	if err != nil {
+		return "", err
+	}
+	return filepath.FromSlash(target), nil
+}
+
 // 创建绑定
-func CreateBind(t *testing.T, baseName string) (*configuration.Link, *configuration.Link) {
-	name, tag, path0 := baseName, baseName+"_tag", baseName+"/path"
-	name1, tag1, path1 := baseName+"1", baseName+"_tag1", baseName+"/path1"
+func CreateBind(t *testing.T, baseName string, useRealDirectory bool) (*configuration.Link, *configuration.Link) {
+	name, tag := baseName, baseName+"_tag"
+	name1, tag1 := baseName+"1", baseName+"_tag1"
+	var path0, path1 string
+
+	if useRealDirectory {
+		p, err := prepareTestDirectory(name)
+		assert.NoError(t, err)
+		path0 = p
+		p, err = prepareTestDirectory(name)
+		assert.NoError(t, err)
+		path1 = p
+	} else {
+		path0 = "/fake/" + name
+		path1 = "/fake/" + name1
+	}
 	ExecuteCommand(t, "add", "link", name)
 	ExecuteCommand(t, "add", "tag", name, tag, path0)
 

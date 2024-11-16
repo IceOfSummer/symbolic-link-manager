@@ -39,7 +39,7 @@ func TestUpdateTag(t *testing.T) {
 }
 
 func TestUpdateBind(t *testing.T) {
-	cur, target := CreateBind(t, "TestUpdateBind")
+	cur, target := CreateBind(t, "TestUpdateBind", false)
 
 	linkName, tag, path := "TestUpdateLinkName", "tag", "/foo/bar"
 	ExecuteCommand(t, "add", "link", linkName)

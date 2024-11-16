@@ -15,29 +15,6 @@ func readLink(linkName string) (string, error) {
 	return os.Readlink(lk)
 }
 
-// 准备测试使用文件夹
-func prepareTestDirectory(linkName string) (string, error) {
-	home := configuration.AppHome()
-
-	testRoot := path.Join(home, "test")
-	_ = os.Mkdir(testRoot, 0b111_111_101)
-
-	target := path.Join(testRoot, linkName)
-	stat, err := os.Stat(target)
-	if err != nil {
-		if !os.IsNotExist(err) {
-			return "", err
-		}
-	} else if stat.IsDir() {
-		return filepath.FromSlash(target), nil
-	}
-	err = os.Mkdir(path.Join(testRoot, linkName), 0b111_111_101)
-	if err != nil {
-		return "", err
-	}
-	return filepath.FromSlash(target), nil
-}
-
 func TestUse(t *testing.T) {
 	linkName, tag := "TestUse", "TestUse_tag"
 	path0, err := prepareTestDirectory("TestUse")
@@ -53,7 +30,7 @@ func TestUse(t *testing.T) {
 }
 
 func TestBindSwitch(t *testing.T) {
-	cur, target := CreateBind(t, "TestBindSwitch")
+	cur, target := CreateBind(t, "TestBindSwitch", true)
 	ExecuteCommand(t, "use", cur.Name, cur.Tag)
 
 	p, err := readLink(cur.Name)
